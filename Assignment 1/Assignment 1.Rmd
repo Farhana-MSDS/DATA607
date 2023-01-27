@@ -1,0 +1,78 @@
+---
+title: "DATA 607: Assignment 1"
+author: "Farhana Akther"
+output: html_document
+date: "2023-01-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Overview
+
+The Ultimate Halloween Candy Power Ranking (https://fivethirtyeight.com/videos/the-ultimate-halloween-candy-power-ranking/) by Walt Hickey is an analysis about the most popular Halloween candies.  Data was collected by creating a website (http://walthickey.com/2017/10/18/whats-the-best-halloween-candy/), where participants were shown presenting two fun-sized candies and asked to click on the one they would prefer to receive. In total, more than 269 thousand votes were collected from 8,371 different IP addresses. For our purposes, we will be focusing on the sugar content of top ten popular candies. 
+
+
+## Load Libraries. 
+
+```{r}
+library(tidyverse)
+```
+
+
+## Import file as CSV.
+In this code we are uploading the data set from github account.
+ 
+```{r}
+Candy <- read.csv("https://raw.githubusercontent.com/FarhanaAkther23/DATA607/main/Assignment%201/candy-data.csv") 
+```
+We are exploring our data in the following steps:
+
+```{r}
+dim(Candy)
+```
+There are 85 different candies and  13 different variables resulted from data dimension 
+
+```{r}
+head(Candy, 15)
+```
+Head brought first 15 rows from data set. 
+
+```{r}
+tail(Candy, 15)
+```
+Tail brought last 15 rows from data set.
+
+## Rename column headers
+
+```{r}
+Candy2 <- rename(Candy,c("CandyName"="competitorname", "Sugarpercent"="sugarpercent", "Popularity"="winpercent"))
+```
+in the code above we changed the name of the column
+
+## Select a Subset
+### How many candies have popularity over 70%?
+
+```{r}
+pop_70<-subset(Candy2, Popularity > 70, select=c(CandyName,Sugarpercent,Popularity))
+pop_70
+```
+
+In the code above, we created a subset pop_70 and we can see there are 10 different candies with popularity over 70%.  
+
+## Bar Plots
+
+
+### Which of the popular top 10 candies has less sugar? 
+
+```{r}
+barplot(height = pop_70$Sugarpercent, names = pop_70$CandyName, las = 3, cex.axis = 1, main = "Sugar Percentage by Fun Size Candy")
+
+```
+
+
+in the code above we have created graph using barplot to compare top 10 popular candy with sugar content. 
+
+## Conclusion
+
+Based on the analyses and visualizations, we can see that although Reese's Miniatures are one of the most popular top 10 fun size cadies, it contains 0.95 percent sugar than Reese's stuffed with pieces. Therefore, the preliminary results suggest that Reese's Miniatures can be a preferable choice for those who want to control their sugar intake.  
