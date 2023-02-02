@@ -1,0 +1,98 @@
+---
+title: "DATA 607: Assignment 2"
+author: "Farhana Akther"
+output: html_document
+date: "2023-02-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Overview 
+
+In this assignment, I have chosen six of the most popular Hollywood movies, and I have asked seven of my coworkers to rate each of the movies they have watched on a scale from 1 (being not good) to 5 (being great). From the responses of my survey, I have created a SQL database. Here, I will first load these data into an R dataframe. For our purposes, we will be comparing which movies has higher average ratings than others.  
+
+
+## Step 1: Load the following libraries:
+
+```{r}
+library(RMySQL)
+library(DBI)
+library(ggplot2)
+```
+
+## Step 2: Connect to MySQL server:
+
+```{r}
+con = dbConnect (MySQL(), user = 'root', password = getOption('database_password'), dbname = 'movie_ratings', Host = 'localhost')
+```
+
+## Step 3: List the tables in "movie_ratings" database:
+
+```{r}
+dbListTables(con)
+```
+As you can see, 3 different tables have been created with information regarding audience, movies and ratings.
+
+## Step 4: Create 3 queries with the follwing SQL syntax within R:
+
+```{r}
+Q1 <- "select * from audience;"
+Q2 <- "select * from movies;"
+Q3 <- "select * from ratings;"
+```
+
+## Step 5: Save queries as dataframes and display their content:
+
+```{r}
+audience <- dbGetQuery(con, Q1)
+audience
+movies <- dbGetQuery(con, Q2)
+movies
+ratings <- dbGetQuery(con, Q3)
+ratings
+```
+## Step 6: Merge and create a subset of 'movies' and 'ratings':
+#### This way, we can have a clear picture of how each movie was rated:
+
+```{r}
+movie_ratings <- merge(movies, ratings, by.x="Movieid")
+movie_ratings2 <- subset(movie_ratings, select=c(Title, Genre, Rating))
+movie_ratings2
+```
+
+## Step 7: Summmary of this new table:
+
+```{r}
+summary(movie_ratings2)
+```
+In summary above we can see that the average rating for all the movies in this database is 4.256. This tells us that these movies were well received by the audience who watched them.
+
+# Step 7: The average movie rating per movie in table:
+
+```{r}
+avg_movie_rating <- aggregate(x=movie_ratings2["Rating"], by = list(movie=movie_ratings2$Title), FUN = mean, , na.rm=TRUE)
+avg_movie_rating
+```
+From the table above, we can see that "The Pursuit of Happyness" has the highest average rating in this list, while "The Dark Knight" has the lowest average rating.
+
+# Step 8: Graphical representaion of average movie ratings per movie:
+
+```{r}
+# Draw plot
+theme_set(theme_bw())
+ggplot(avg_movie_rating, aes(x= reorder(movie, -Rating), y=Rating)) + 
+  geom_bar(stat="identity", width=.5, fill="tomato3") + 
+  labs(title="Movie Ratings", 
+       subtitle="Movie vs Avg. Rating") + 
+  theme(axis.text.x = element_text(angle=65, vjust=0.6)) + 
+  scale_x_discrete(name="Movies")
+```
+
+
+# Conclusion
+
+Based on my survey analysis, and the data visualization, The Pursuit of Happyness has the highest average rating of 4.8 compared to The Dark Knight which received a 3.8 out of 5. In the future, what I would be interested in exploring is the profit margins of each movie and compare them to my survey to analyze the relationship between them. To do so, I would research online and go through each movies budget amount vs. the profit as well as compared to my survey vs general popularity. 
+```
