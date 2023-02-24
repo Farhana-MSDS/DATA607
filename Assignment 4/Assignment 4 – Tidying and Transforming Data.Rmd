@@ -1,0 +1,181 @@
+---
+title: 'Assignment 4: Tidying and Transforming Data'
+author: "Farhana Akther"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+
+**Overview:**
+
+In this assignment we are given a wide structured table with information on arrival delays for two airlines across five destinations. We are assigned to create a .CSV file that includes the given fight information. The goal of this assignment is to tidying and transforming the data as described below:
+
+  * Read the information from your .CSV file into R.
+  
+  * Use tidyr and dplyr to tidy and transform data.
+  
+  * Perform analysis to compare the arrival delays for the two airlines.
+  
+  * Code should be in an R Markdown file, and should include narrative descriptions of the data cleanup work, analysis, and conclusions. 
+
+**To begin, we will create a .CSV file with given flights data, upload load to GitHub, then load from GitHub to R. From R, we will use the necessary libraries to tidy and transform the data.**
+
+
+**Load required libaries:** 
+
+
+```{r}
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+```
+
+**Obtain data form Github:**
+
+```{r}
+FlightsData <- read.csv("https://raw.githubusercontent.com/FarhanaAkther23/DATA607/main/Assignment%204/FlightsData.csv", header = TRUE)
+```
+
+**View our data:**
+
+```{r}
+FlightsData
+```
+
+**The table above shows that the data in its current format is untidy:**
+
+  * The 1st two columns can have better name than x and x1. 
+  
+  * The 3rd row contains no data, both NA values and empty strings.
+  
+  * The airline name is missing in two of the cells, rows 2 and 5 in the x column.
+  
+  * The data is in a wide format as we can see the names of the cities are condensed into a single column. Also, the values in the cells can also be shortened into a single column.
+  
+  * We can also see that the some if city names are produced in the column with a . characters (Los.Angeles, San.Diego, etc.). The . was not present in the city names in the original .CSV file, but they were added during the import to prevent there being spaces in the dataframe column names.
+  
+
+**Tidy Data Steps:** 
+
+To tidy the data, We will get rid of the row with no information and assign a name to the airline and status columns. We will also add the names of the airlines to the two empty cells in the airline column. Additionally, will transform the data from wide to long format as well as replace the . with space to prepare it for analysis:
+
+```{r}
+flightsData2 <- FlightsData[-c(3),]
+flightsData2
+```
+*above table now shows 4 rows instead of 5 rows.*
+
+```{r}
+flightsData2 <- flightsData2 %>% rename(Airline = x, Status = x1)
+flightsData2
+```
+*above table now shows first to column names instead of x and x1.*
+
+```{r}
+flightsData2[2, 1] <- "ALASKA"
+flightsData2
+```
+*Above table now shows missing Airline name in 2nd raw (ALASKA).*
+
+```{r}
+flightsData2[4, 1] <- "AM WEST"
+flightsData2
+```
+*Above table shows missing Airline name in 4th raw (AM WEST).*
+
+
+**The complete tidy data:**
+
+```{r}
+flightsData2 <- FlightsData[-c(3),]
+flightsData2 <- flightsData2 %>% rename(Airline = x, Status = x1)
+flightsData2[2, 1] <- "ALASKA"
+flightsData2[4, 1] <- "AM WEST"
+flightsData2 <- flightsData2 %>% gather("Destination", "Flights", 3:7) %>% arrange(Airline, desc(Status), Destination)
+flightsData2$Destination <- str_replace_all(flightsData2$Destination, "\\.", " ")
+flightsData2
+```
+*above table now shows transformation of the data from wide to long format and the replaced . with space for Destination.*
+
+
+**Analyze Data with visualization:**
+
+**Number of delayed and on-time flights to each destination by airline**
+
+```{r, message=FALSE, warning=FALSE, fig.show="hold", out.width="50%", fig.height=3}
+airline1 <- filter(flightsData2, Airline == "ALASKA")
+airline2 <- filter(flightsData2, Airline == "AM WEST")
+airline1
+airline2
+```
+*Above are two tables representing the number of delayed and on-time flights to each destination by airline*
+
+```{r, message=FALSE, warning=FALSE, fig.show="hold", out.width="50%", fig.height=3}
+ggplot(airline1, aes(Destination, Flights, fill = Status, color = Airline)) + geom_bar(position="dodge", stat="identity")
+ggplot(airline2, aes(Destination, Flights, fill = Status, color = Airline)) + geom_bar(position="dodge", stat="identity")
+```
+*Above are two graphs representing the number of delayed and on-time flights to each destination by airline*
+
+From the above table and the graph, We can see that Alaska Airline has the highest number of on-time flights and delayed flights in Seattle as well the AM West Airline has the highest on-time flights and delayed flights in Phoenix, this is probably because both cities has the highest number flights for both Airlines compared to other destinations.
+
+**Airline Status Transformation:**
+
+we can use spread() function from tidyr to transform the data to bring the number of delayed and on-time flights in two new columns (delayed and on-time).
+
+```{r}
+dataTran <- spread(flightsData2, Status, Flights)
+dataTran
+```
+
+**Total delayed and on-time by destination and their corresponding ratio:**
+
+```{r, message=FALSE, warning=FALSE, fig.show="hold", out.width="80%", fig.height=3}
+totalCity <- dataTran %>% group_by(Destination) %>% summarise(Delayed = sum(delayed),OnTime = sum(`on time`), Total = Delayed + OnTime) %>% mutate(DelayRatio = Delayed/Total, OnTimeRatio = OnTime/Total)
+totalCity
+statusRatio <- select(totalCity, -c("Delayed", "OnTime", "Total"))
+statusRatio <- statusRatio %>% rename(Delay = DelayRatio, OnTime = OnTimeRatio) %>% gather("Status", "Ratio", 2:3)
+ggplot() + geom_bar (aes(x = Destination, y = Ratio, fill = Status), data = statusRatio, stat = "identity")
+```
+
+We can see from the above output and the graph that San Francisco has the largest ratio of delayed flights with about 22%, while Phoenix has the largest ratio of on time flights with about 92%.
+
+**The Destinations with the maximum and minimum number of flights respectively:**
+
+```{r}
+max <- totalCity %>% filter(Total == max(Total))
+max
+min <- totalCity %>% filter(Total == min(Total))
+min
+```
+
+**Total delayed and on time by airline and their respective ratio:**
+
+```{r, message=FALSE, warning=FALSE, fig.show="hold", out.width="80%", fig.height=3}
+totalAirline <- dataTran %>% group_by(Airline) %>% summarise(Delayed = sum(delayed),OnTime = sum(`on time`), Total = Delayed + OnTime) %>% mutate(DelayRatio = Delayed/Total, OnTimeRatio = OnTime/Total)
+totalAirline
+statusRatio2 <- select(totalAirline, -c("Delayed", "OnTime", "Total"))
+statusRatio2 <- statusRatio2 %>% rename(Delay = DelayRatio, OnTime = OnTimeRatio) %>% gather("Status", "Ratio", 2:3)
+ggplot() + geom_bar (aes(x = Airline, y = Ratio, fill = Status), data = statusRatio2, stat = "identity")
+```
+
+We can see above that the ratios for delayed and on-time flights for both airlines are fairly similar when destinations are combined, however AM West airlines has nearly double the number of flights than those of Alaska airlines.
+
+**Compare the number of delayed and on-time flights by destination and Airline:**
+
+
+```{r, message=FALSE, warning=FALSE, fig.show="hold", out.width="80%", fig.height=3}
+ggplot(flightsData2, aes(Destination, Flights, fill = Status, color = Airline)) + geom_bar(position="dodge", stat="identity")
+```
+
+
+**Conclusion:**
+
+Finally, when we compare the number of delayed and on-time flights by destination and Airline (from the graph above), we can  see that AM WEST airline had the most on time flights. However, there are two destinations to which ALASKA airline has more on time fights than AM WEST airline, and those are San Francisco and Seattle.
