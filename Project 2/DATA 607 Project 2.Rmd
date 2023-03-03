@@ -1,0 +1,365 @@
+---
+title: "DATA 607 Project 2"
+author: "Farhana Akther"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+**Overview:**
+
+In this assignment we are asked to choose 3 wide structured data sets and to create a .CSV file that includes data from our findings. The goal of this assignment is to tidy and transform the data as described below:
+
+  * Create a .CSV file that includes all of the information included in the dataset and read the information from .CSV file into R. 
+  
+  * Use tidyr and dplyr to tidy and transform data and perform our analysis.
+  
+  * Code should be in an R Markdown file, and should include narrative descriptions of the data cleanup work, analysis, and conclusions. 
+
+**To begin, we will create a .CSV file, upload load to GitHub, then load from GitHub to R. From R, we will use the necessary libraries to tidy and transform the data.**
+
+
+**Load required libraries:** 
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(scales)
+library(data.table)
+```
+
+
+## Datasets {.tabset}
+
+### U.S Imports for Consumption of Steel Products: 
+
+This is a dataset that contains U.S. Imports for Consumption of Steel Products measured by quantity in metric tons and value in thousands of dollars as of November, December and Annual for the year 2021 - 2022. 
+
+First we will load the data:
+
+**Obtain data from Github:**
+
+
+``` {r}
+Steel<-read.csv("https://raw.githubusercontent.com/FarhanaAkther23/DATA607/main/Project%202/US%20imports%20for%20Consumption%20of%20Steel%20Products%20Dec%202022%20.csv", skip = 6L)
+```
+
+
+```{r}
+head(Steel)
+```
+
+Above data is untidy. Now we will transform the data for further analysis. We will add appropriate column names to identify our data and get rid of a few rows that we not need for our analysis:
+
+```{r}
+colnames(Steel)[1:13] <- c("Commodity Group", "Quantity December 2022", "Value December 2022", "Quantity November 2022", "Value November 2022", "Quantity December 2021", "Value December 2021", "Quantity November 2021", "Value November 2021", "Quantity Final 2022", "Value Final 2022", "Quantity Final 2021", "Value Final 2021")
+Steel2 <- Steel[-c(1:7, 9, 49, 50),]
+```
+
+```{r}
+head(Steel2)
+```
+Above we can see that all the columns have appropriate names instead of x and we have removed all the empty rows from the regional .CSV file.
+
+Now that our data looks much cleaner, we can start analyzing:
+
+
+First we’ll look at each commodity by quantity at the end of 2021 and 2022:
+
+```{r}
+commodity <- Steel2[-c(1),]
+commodity <- select(commodity, "Commodity Group", "Quantity Final 2022", "Value Final 2022", "Quantity Final 2021", "Value Final 2021")
+commodityq <- commodity %>% gather("Annual", "Quantity", 2:5) %>% filter(Annual %in% c("Quantity Final 2022", "Quantity Final 2021"))
+
+#Our quantities were being read as strings because they included a comma in them. I have changed them to numeric in this step:
+```
+
+```{r}
+commodityq$Quantity <- as.numeric(gsub(",", "", commodityq$Quantity))
+```
+
+
+**Visual Comparison of Commodity Imports by Quantity:** 
+
+```{r}
+ggplot(data=commodityq, aes(x=`Commodity Group`, y=Quantity, fill = factor(`Commodity Group`))) + geom_bar(stat = "identity") + theme(legend.position = "none", axis.text.y = element_text(size=4), axis.text.x = element_text(angle = 90, hjust = 1, size=5)) + labs(y="Quantity (Metric Tons)") + coord_flip() + facet_wrap(~Annual, ncol=2)
+```
+
+From the graph above, We can see that overall quantities of steel import for consumption have increased between 2021 and 2022 with a few variations. On the contrary, it looks like the largest quantity import Blooms, Billets and Slabs, has actually decreased it's imports from 2021 to 2022 with a difference of about 2,828,242 metric tons. Form this we can assume that the COVID pandemic may have impacted negativity the consumption of steel product for Blooms, Billets and Slabs. 
+
+
+**Visual Comparison of Commodity of Imports by Value**
+
+
+
+```{r}
+commodityv <- commodity %>% gather("Annual", "Value", 2:5) %>% filter(Annual %in% c("Value Final 2022", "Value Final 2021"))
+#Our values were being read as strings because they included a comma in them. We have changed them to numeric in this step:
+```
+
+```{r}
+commodityv$Value <- as.numeric(gsub(",", "", commodityv$Value))
+```
+
+```{r}
+ggplot(data=commodityv, aes(x=`Commodity Group`, y=Value, fill = factor(`Commodity Group`))) + geom_bar(stat = "identity") + theme(legend.position = "none", axis.text.y = element_text(size=4), axis.text.x = element_text(angle = 90, hjust = 1, size=5)) + labs(y="Value (Thousands of Dollars)") + coord_flip() + facet_wrap(~Annual, ncol=2)
+```
+
+*From the graph above, We can see that the value for the imports correlate with the quantities being imported.*
+
+One big difference that is noticeable is the value between two of the largest imports of steel for **Oil Country Goods** and **Blooms, Billets and Slabs**. Apparently, Oil Country Goods are more expensive than Blooms, Billets and Slabs, which is why in 2021 we can see that even though quantity is higher for Blooms, Billets and Slabs, the value is higher for Oil Country Goods. Form this we can assume that probably the war between Russia and Ukraine has impacted negativity the price of steel product specially for Oil Country Goods. 
+ 
+
+**Total import for consumption of steel:**
+
+Finally we will look at the total import for consumption of steel products by quantity and value for the years 2021 and 2022. 
+
+```{r}
+totalq <- Steel2 %>% select("Commodity Group", "Quantity Final 2022", "Value Final 2022", "Quantity Final 2021", "Value Final 2021") %>% gather("Annual", "Quantity", 2:5) %>% filter(`Commodity Group` == "Total Selected Commodities") %>% filter(Annual %in% c("Quantity Final 2022", "Quantity Final 2021")) 
+
+totalv <- Steel2 %>% select("Commodity Group", "Quantity Final 2022", "Value Final 2022", "Quantity Final 2021", "Value Final 2021") %>% gather("Annual", "Value", 2:5) %>% filter(`Commodity Group` == "Total Selected Commodities" & Annual %in% c("Value Final 2022", "Value Final 2021"))
+```
+
+
+```{r}
+ggplot(totalq, aes(Annual, Quantity)) + geom_bar(stat="identity", width = 0.7,  color = "steelblue4", fill = "steelblue1") + labs(y="Quantity (Metric Tons)", title="Total Import of Steel by Quantity for 2021 and 2022")
+```
+
+
+*By looking at this graph, it looks like the overall quantity of the consumption has decreased almost 50% which is a bit misleading. However, if we look at the number of quantity, We can see that the total quantity of steel import for consumption of steel products was only 1.9% less at the end of 2022 than it was in 2021.* 
+
+Further, we would expect for the total value to correlate with these quantities. Let's find out what the total value of steel import for consumption of steel products looks like:
+
+```{r}
+ggplot(totalv, aes(Annual, Value)) + geom_bar(stat="identity", width = 0.7, color = "steelblue4", fill = "steelblue1") + labs(y="Value (Thousands of Dollars)", title="Total Import of Steel by Value for 2021 and 2022")
+```
+
+*From the graph above we can see that although the consumption quantity has decreased from the last few years, the price for over all steel product has increased in 2022 then 2021.* 
+
+
+**Conclusion:**
+
+In this project we have taken an untidy data and have tidy it up. From our analysis we can see that the U.S. imports for consumption of steel products has decreased in last few years where the price has increased. Thus, we can see the correlation between the value and quantities. What also stands out is that the largest quantity import Blooms, Billets and Slabs, has decreased it's imports significant from 2021 to 202 which, I assumed could be due to COVID pandemic. Also, the over all price hike may caused by the value increase of Oil Country Goods which, I assumed could be due to the recent war between Russia and Ukraine. 
+
+
+
+
+
+###  U.S. Presidential Vote 2016: CA and FL
+
+This is a dataset that contains the 2016 US presidential vote counts for two U.S. states: California and Florida. 
+
+First we will load the data:
+
+**Obtain data from Github:**
+
+
+```{r}
+Election<-read.csv("https://raw.githubusercontent.com/FarhanaAkther23/DATA607/main/Project%202/Election%20Result%20for%202016%20U.S.%20Presidential%20Vote.csv")
+Election
+```
+
+In this table, the column names CA and FL are values of the variable *state*. Therefore, we can say that this table is in an untidy and table format is wide. 
+
+
+**Tidying the date:**
+
+We will remove the X column which, adds no values in our data.  
+
+
+```{r}
+Election2 <- Election[,-1]
+Election2
+```
+
+**Long Format**
+
+We are gong melt this table from Wide to long format below using library(data.table)
+
+```{r}
+library(data.table)
+Election2<- melt(as.data.table(Election2),
+     id.vars = "Candidate",
+     measure.vars = c("CA", "FL"),
+     variable.name = "State",
+     value.name = "Votes")
+Election2
+```
+
+From the table above we can see that data is in long format and we have removed extra x column. Now that we have tidy dataset lets do some analysis in this. 
+
+
+**Analysis**:
+
+Lets calculate the total votes for each candidate
+
+```{r}
+Total_Votes <- Election2 %>%
+  group_by(Candidate) %>%
+  summarize(Total_Votes = sum(Votes))
+Total_Votes
+```
+
+From this table we can see that Hillary Clinton has a most votes combined in CA and FL. 
+
+
+Now we are going to add the total votes to the long format data frame:
+
+```{r}
+Election3 <- merge(Election2, Total_Votes, by = "Candidate")
+Election3
+```
+
+Above we can see that total votes in one table 
+
+
+
+
+
+
+Lets calculate the percentage of total Votes for each candidate:
+
+
+```{r}
+Vote_Percentage <- Election3 %>%
+  group_by(Candidate, State)%>%
+  summarize(Percentage = Votes/Total_Votes)
+  Vote_Percentage$Percentage <- label_percent()(Vote_Percentage$Percentage)
+Vote_Percentage
+```
+
+From the table above, we can see that total percentage for each state per candidate. This data does not gives a clear picture of the candidates' lead as the percentage are calculated for each candidates with their own vote count. So, if we look at Jill Stein vote percentage in CA it looks like Jill is leading (which is not really true) but it's because we are calculating the percentage for each candidate with their own votes for each states.  
+
+
+**Visualization**
+
+```{r}
+library(ggplot2)
+
+ggplot(Election3, aes(x = Candidate, y = Votes, fill = State)) +
+  geom_col(position = "dodge") +
+  labs(title = "Vote Counts in Each State Per Candidate",
+       x = "Candidate", y = "Votes",
+       fill = "State")
+```
+
+*The graph above shows the number of votes for each candidate for each states: CA and FL from 2016 election* 
+
+**Conclusion:**
+
+In this project we have taken an untidy data that contains the 2016 US presidential vote counts for two U.S. states: California and Florida and have tidy it up. We have calculated total number votes and percentage for each candidates. From our analysis we can see that although Donald Trump was leading in FL, Hillary Clinton was pretty close too about 1.7% difference. Additionally, Hillary Clinton had the  most vote counts in CA compared to Donald Trump as well as the other candidates. As per the percentage analysis, I think further analysis can be done by calculating the percentage based on the total number of vote as a whole. 
+
+
+
+### Farm Output by state
+
+This is a dataset that contains the total output of farms by state from 1960-2004. We will tidy the data in order to find some patterns.
+
+First we will load the data:
+
+**Obtain data from Github:**
+
+*Note that we eliminate the first five rows when loading in order to make the column names the 6th row in the dataset.*
+
+```{r}
+Farm<-read.csv("https://raw.githubusercontent.com/FarhanaAkther23/DATA607/main/Project%202/Farm%20Output%20by%20State.CSV", skip = 5L)
+```
+
+```{r}
+head(Farm)
+```
+
+**Tidying the Date:**
+
+Let's eliminate all empty rows:
+```{r}
+Farm2 <- na.omit(Farm)
+head (Farm2)
+```
+
+**Long Format**
+
+The data will be transformed from wide to long and we will make our new "State" and "Output" columns:
+
+```{r}
+Farm_long <- Farm2[-c(46:54),]
+Farm_long <- gather(Farm_long, "State", "Output", 2:49)
+head(Farm_long)
+tail(Farm_long)
+```
+
+**Analysis**
+
+We will now summarize some of our data to see a graph that shows the total output by state from 1960 to 2004.
+
+```{r}
+TotalState <- Farm_long %>% group_by(State) %>% summarise(Total = sum(Output))
+head(TotalState)
+```
+
+*Above table shows total farm output by state from 1960-2004*
+
+
+**Visualization**
+
+**Total  output by state from 1960 to 2004:** 
+
+```{r}
+ggplot(TotalState, aes(State, Total)) + geom_bar(stat="identity", width = 0.5, color="coral4", fill="coral1") + labs(y="Output", title="Total Farm Output by State: 1960-2004") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+From this graph above, We can see above that CA had the largest farm output from 1960 to 2004. This is understandable as California leads the country as the largest producer of agricultural products (crops and livestock) and one of the top largest states in the country.
+
+
+**Now let’s see which year had the highest farm output:**
+
+```{r}
+TotalYear <- Farm_long %>% group_by(Year) %>% summarise(Total = sum(Output))
+ggplot(TotalYear, aes(Year, Total)) + geom_bar(stat="identity", width = 0.5, color="salmon4", fill="salmon1") + labs(y="Output", title="Total Farm Output in the US: 1960-2004") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+From the graph above, we can see that farm output has been increasing at a steady rate from 1960-2004. 
+
+**lets us also take a look at the average annual growth rate over the years:**
+
+```{r}
+Farm3 <- Farm2[c(47:54),]
+Farm3_long <- gather(Farm3, "State", "AVG Annual Growth", 2:49)
+totalGrowth <- Farm3_long %>% group_by(Year) %>% summarise(Total = sum(`AVG Annual Growth`))
+ggplot(totalGrowth, aes(Year, Total)) + geom_bar(stat="identity", width = 0.5, color= "burlywood4", fill="burlywood1") + labs(y="Rate", title="Average Annual Growth Rates (percent): 1960-2004")
+```
+
+
+In the graph above, we can see that the highest growth rate in farm output happened between the years 1973 and 1979. This could be due to the farm boom of the 1970s, we can see a similar boom happening during the 1990s.
+
+
+
+**Conclusion:**
+
+In this project we have taken an untidy wide dataset that contains the total U.S farm output by State from 1960-2004. we have tidy it by removing unwanted rows, transform the dataset from wide to long format and gave proper names for the column. We have also calculated totals and created visual graphs to be able to analyze the performance of total farm outputs for each state. By tidying, visualizing and analyzing the dataset, we were able to find out which stated were out perfuming (like CA), the steady growth of farm output over the years as well as the total average growth.   
+
+
+
+
+
+*Source:*
+
+https://www.ers.usda.gov/data-products/agricultural-productivity-in-the-u-s/agricultural-productivity-in-the-u-s/#State-Level%20Tables,%20Relative%20Level%20Indices%20and%20Growth,%201960-2004-Outputs
+https://www.ers.usda.gov/data-products/chart-gallery/gallery/chart-detail/?chartId=58315
+https://aei.ag/2020/11/30/the-farm-economy-inflation-and-the-1970s/
+http://sape.inf.usi.ch/quick-reference/ggplot2/colour
+https://bookdown.org/yihui/rmarkdown/html-document.html#tabbed-sections
+https://www.census.gov/foreign-trade/Press-Release/steel_index.html
+https://stackoverflow.com/questions/1523126/how-to-read-data-when-some-numbers-contain-commas-as-thousand-separator
+https://gagneurlab.github.io/dataviz/tidy-data-and-combining-tables.html
+
+
