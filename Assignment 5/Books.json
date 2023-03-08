@@ -1,0 +1,24 @@
+{"Books" :[
+    {
+    "Title" : "The Talisman",
+    "Author" : "PStephen King, Peter Francis Straub",
+    "Genre" : "Dark fantasy",	
+    "Publisher" : "Viking", 
+    "Year Published" : "1984"
+    },
+    {
+    "Title" : "The Color of Water",
+    "Author" : "James McBride",
+    "Genre" : "Memoir",	
+    "Publisher" : "Penguin Group", 
+    "Year Published" : "1996"
+    },
+    {
+    "Title" : "The Hunger Games",
+    "Author" : "Suzanne Collins",
+    "Genre" : "Adventure, Science fiction",	
+    "Publisher" : "Scholastic", 
+    "Year Published" : "2008"
+    }
+  ]
+}
