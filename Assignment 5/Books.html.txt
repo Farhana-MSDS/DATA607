@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Books</title>
+</head>
+  <body>
+    <table>
+      <tr>    
+        <th>Title</th> 
+        <th>Authors</th> 
+        <th>Genre</th> 
+        <th>Publisher</th>
+	<th>Year Published</th>      
+      </tr>
+      <tr>    
+        <td>The Talisman</td> 
+        <td>Stephen King, Peter Francis Straub</td> 
+        <td>Dark fantasy</td> 
+        <td>Viking</td> 
+	<td>1984</td>    
+      </tr>
+      <tr>    
+        <td>The Color of Water</td> 
+        <td>James McBride</td> 
+        <td>Memoir</td> 
+        <td>Penguin Group</td>
+	<td>1996</td>  
+      </tr>
+      <tr>    
+        <td>The Hunger Games</td> 
+        <td>Suzanne Collins</td> 
+        <td>Adventure, Science fiction</td> 
+        <td>Scholastic</td> 
+	<td>2008</td> 
+      </tr>       
+    </table>
+  </body>
+</html>
