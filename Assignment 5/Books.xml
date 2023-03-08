@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Books>
+    <book id="1">
+        <Title>The Talisman</Title>
+        <Author>Stephen King, Peter Francis Straub</Author>
+        <Genre>Dark fantasy</Genre>
+        <Publisher>Viking</Publisher>
+	<YearPublished>1984</YearPublished>
+    </book>
+    <book id="2">
+        <Title>The Color of Water</Title>
+        <Author>James McBride</Author>
+        <Genre>Memoir</Genre>
+        <Publisher>Penguin Group</Publisher>
+	<YearPublished>1996</YearPublished>
+    </book>
+    <book id="3">
+        <Title>The Hunger Games</Title>
+        <Author>Suzanne Collins</Author>
+        <Genre>Adventure, Science fiction</Genre>
+        <Publisher>Scholastic</Publisher>
+	<YearPublished>2008</YearPublished>
+    </book>
+</Books>
+
