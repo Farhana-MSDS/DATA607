@@ -1,0 +1,150 @@
+---
+title: "DATA607 Assignment 5"
+author: "Farhana Akther"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Working with HTML, XML and JSON in R
+
+**Overview:**
+
+In this assignment we had to pick three of our favorite books. At least one of the books will need to have more than one author. For each book, we will need to include the following:
+
+  * the title, authors, and two or three other attributes that we find interesting. 
+  * We will also have to create three files with three different formats, which are: HTML, XML, and JSON.
+  * Write R code to load the information from each of the three sources into separate R data frames. 
+  * Find out if the three data frames identical.
+
+
+**I have picked three books of my choice and created a file for each format with the following attributes: Title, Author, Genre, Publisher and Year Published.**
+
+*I wrote the files using notepad, saved saved them as .html, .json and .xml. I have saved all these three files in a github repository from where I will be extracting the data from.*
+
+## HTML to R
+
+First load the libraries that to extract and parse the HTML file. Use *Rcur* to facilitate the extraction process from the web, *DT* to create a table and *XML* to read my HTML file:
+
+```{r}
+#load packages
+library(RCurl)
+library(DT)
+library(XML)
+```
+
+```{r}
+#parse file from web
+htmlURL <- getURL("https://raw.githubusercontent.com/FarhanaAkther23/DATA607/main/Assignment%205/Books.html")
+books_html <- htmlParse(htmlURL)
+```
+
+
+```{r}
+#create data frame
+books_html_table <- readHTMLTable(books_html, stringsAsFactors = FALSE)
+books_html_table <- books_html_table[[1]]
+books_html_table
+```
+
+
+```{r}
+#view
+datatable(books_html_table)
+```
+
+```{r}
+#structure of column 
+str(books_html_table)
+```
+
+## XML to R
+
+Used the same libraries to extract and parse the XML file the ones in previous example. Use *Rcurl* to facilitate the extraction process from the web, *DT* to create a table and *XML* to read my XML file:
+
+```{r}
+#get URL and Parse
+xmlURL <- getURL("https://raw.githubusercontent.com/FarhanaAkther23/DATA607/main/Assignment%205/Books.xml")
+books_xml <- xmlParse(xmlURL)
+```
+
+
+```{r}
+#create data frame
+books_xml_table <- xmlToDataFrame(books_xml, stringsAsFactors = FALSE)
+books_xml_table
+```
+
+```{r}
+#view
+datatable(books_xml_table)
+```
+
+```{r}
+#structure
+str(books_xml_table)
+```
+
+
+## JSON to R 
+
+Used the same libraries to extract and parse the XML file the ones in previous example as well as *RJSONIO*. Use *Rcurl* to facilitate the extraction process from the web, *DT* to create a table and *RJSONIO* to read my XML file:
+
+```{r}
+#load package
+library(RJSONIO)
+```
+
+```{r}
+#parse file from web
+jsonURL <- getURL("https://raw.githubusercontent.com/FarhanaAkther23/DATA607/main/Assignment%205/Books.json")
+books_json <- fromJSON(jsonURL)
+```
+
+```{r}
+#create data frame
+books_json_table <- do.call("rbind", lapply(books_json[[1]], data.frame, stringsAsFactors = FALSE))
+books_json_table
+```
+
+```{r}
+#view
+datatable(books_json_table)
+```
+
+
+```{r}
+#structure
+str(books_json_table)
+```
+
+
+## Observation
+
+From all three data frames, we can see that they look pretty much identical with few differences. For the XML file, I had to write “Year Published” together("YearPublished") in order for the file to run properly. Thus, it shows on the title of the table as "YearPublished".  Also, even though the JSON file allowed me to write “Year Published” separately and not have any issues when running the code, when printed here on R, we can see that the space in between was replaced with a dot (.). Lastly, we can see from looking at the structures of each table that all the fields are read as characters except for “Year Published” in the JSON file, which is read as a number.
+
+Source:
+
+https://www.w3schools.com/html/
+
+https://www.w3schools.com/xml/default.asp
+
+https://www.w3schools.com/js/js_json.asp
+
+https://bookdown.org/yihui/rmarkdown/html-document.html (3.1.1)
+
+https://stackoverflow.com/questions/53241565/how-do-i-get-the-geturl-function-to-work-in-r
+
+https://stackoverflow.com/questions/26840020/issues-with-readhtmltable-in-r
+
+https://rstudio.github.io/DT/
+
+
+
