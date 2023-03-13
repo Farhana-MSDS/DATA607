@@ -1,0 +1,209 @@
+---
+title: "Project 3"
+author: "Farhana Akther"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Introduction
+
+#### Relational Database Setup
+
+For our project, we are utilizing a relational database hosted in Azure. Specifically it is an instance of Azure SQL.
+
+#### Setting Up a Keyring and Creating the Connection
+
+The first step to setting up our MySQL database is to connect to it. Here we utilize the odbc package in combination with the dbi package to connect to our cloud hosted instance of Azure SQL. To keep our SQL Database secure, We also utilize the keyring package in order to ensure that the password never gets stored as code. Please note that to connect through odbc to Azure SQL Server, OBDC Driver 18 for SQL Server is required. This can be downloaded here: https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16.
+
+```{r connect to Azure SQL Server}
+library(tidyverse)
+library(odbc)
+library(DBI)
+library(keyring)
+if (!("Overview8909" %in% as_vector(key_list()[2]))) {
+  key_set("Project3SQL","Overview8909")
+}
+```
+
+#### Configuring Database Tables
+
+As this is a fresh Azure SQL server instance, we want to create the tables that will hold the information of our dataset. We initialize the tables with our queries.
+
+```{r Configuring Database Tables}
+my_connection <- dbConnect(drv = odbc::odbc(),
+                           Driver = "ODBC Driver 18 for SQL Server",
+                           server = "tcp:data607project3server.database.windows.net,1433",
+                           database = "Data 607 Project 3 Database",
+                           uid = "Overview8909",
+                           pwd = key_get("Project3SQL","Overview8909"),
+                           encoding = "latin1"
+                           )
+query1 <- r"(
+  CREATE TABLE nyc_jobs( 
+    job_id INT,
+    agency VARCHAR(40),
+    posting_type VARCHAR(12),
+    num_positions INT,
+    business_title VARCHAR(150),
+    civil_service_title VARCHAR(40),
+    title_classification VARCHAR(30),
+    title_code_num VARCHAR(10),
+    level VARCHAR(5),
+    job_category VARCHAR(300),
+    full_time_indicator VARCHAR(2),
+    career_level VARCHAR(30),
+    salary_range_from DEC(20,10),
+    salary_range_to DEC(20,10),
+    salary_frequency VARCHAR(10),
+    agency_location VARCHAR(30),
+    work_unit VARCHAR(40),
+    job_description VARCHAR(MAX),
+    minimum_qual VARCHAR(MAX),
+    preferred_skills VARCHAR(4000),
+    additional_information VARCHAR(3500),
+    to_apply VARCHAR(3500),
+    shift VARCHAR(2000),
+    work_location VARCHAR(1000),
+    recruitment_contact VARCHAR(10),
+    residency_requirement VARCHAR(1000),
+    posting_date VARCHAR(15),
+    post_until VARCHAR(15),
+    posting_updated VARCHAR(15),
+    process_date VARCHAR(15),
+    PRIMARY KEY (job_id));
+)"
+
+query2 <- r"(
+  CREATE TABLE nyc_jobs_codes( 
+    title_code_num VARCHAR(10),
+    civil_service_title VARCHAR(40),
+    title_classification VARCHAR(30),
+    level VARCHAR(5),
+    PRIMARY KEY (title_code_num));
+)"
+
+query3 <- r"(
+  CREATE TABLE nyc_jobs_agencies( 
+    work_unit VARCHAR(40),
+    agency VARCHAR(40),
+    agency_location VARCHAR(30),
+    PRIMARY KEY (work_unit));
+)"
+
+query4 <- r"(
+  CREATE TABLE nyc_jobs_specifics(
+    job_id INT
+    posting_type VARCHAR(12),
+    job_description VARCHAR(MAX),
+    minimum_qual VARCHAR(MAX),
+    preferred_skills VARCHAR(4000),
+    additional_information VARCHAR(3500),
+    to_apply VARCHAR(3500),
+    shift VARCHAR(2000),
+    work_location VARCHAR(1000),
+    recruitment_contact VARCHAR(10),
+    residency_requirement VARCHAR(1000),
+    post_until VARCHAR(15),
+    process_date VARCHAR(15),
+    PRIMARY KEY (job_id));
+)"
+
+query5 <- r"(
+  CREATE TABLE nyc_jobs_basics( 
+    num_positions INT,
+    business_title VARCHAR(150),
+    title_code_num VARCHAR(10),
+    level VARCHAR(5),
+    job_category VARCHAR(300),
+    full_time_indicator VARCHAR(2),
+    career_level VARCHAR(30),
+    salary_range_from DEC(20,10),
+    salary_range_to DEC(20,10),
+    salary_frequency VARCHAR(10),
+    work_unit VARCHAR(40),
+    posting_date VARCHAR(15),
+    posting_updated VARCHAR(15),
+    FOREIGN KEY (title_code_num) REFERENCES nyc_jobs_codes(title_code_num), nyc_jobs_agencies(work_unit),
+    PRIMARY KEY (job_id));
+)"
+
+
+query_combination <- c(query, query1, query2, query3, query4)
+for (query in query_combination) {
+  dbExecute(my_connection,query)
+  Sys.sleep(0.5)
+}
+
+dbDisconnect(my_connection)
+```
+
+We then store the data from our datasets in the server.
+
+```{r Populating Database Tables}
+url <- r"(https://data.cityofnewyork.us/api/views/kpav-sd4t/rows.csv?accessType=DOWNLOAD)"
+nyc_jobs_raw <- read_csv(url, show_col_types = FALSE)
+colnames(nyc_jobs_raw) <- c(
+    'job_id',
+    'agency',
+    'posting_type',
+    'num_positions',
+    'business_title',
+    'civil_service_title',
+    'title_classification',
+    'title_code_num',
+    'level',
+    'job_category',
+    'full_time_indicator',
+    'career_level',
+    'salary_range_from',
+    'salary_range_to',
+    'salary_frequency',
+    'agency_location',
+    'work_unit',
+    'job_description',
+    'minimum_qual',
+    'preferred_skills',
+    'additional_information',
+    'to_apply',
+    'shift',
+    'work_location',
+    'recruitment_contact',
+    'residency_requirement',
+    'posting_date',
+    'post_until',
+    'posting_updated',
+    'process_date')
+nyc_jobs_raw[is.na(nyc_jobs_raw)] <- "" 
+nyc_jobs_raw <- nyc_jobs_raw[!duplicated(nyc_jobs_raw$job_id),]
+nyc_jobs_codes <- nyc_jobs_raw |> #Use this as this an outline for each new dataframe table
+  select(c('civil_service_title','title_classification','level','title_code_num'))
+nyc_jobs_agencies <- nyc_jobs_raw |> 
+  select(c('agency', 'agency_location', 'work_unit'))
+nyc_jobs_specifics <- nyc_jobs_raw |> 
+  select(c('job_id', 'posting_type', 'job_description', 'minimum_qual', 'preferred_skills', 'additional_information', 'to_apply', 'shift', 'work_location', 'recruitment_contact', 'residency_requirement', 'post_until', 'process_date'))
+nyc_jobs_basics <- nyc_jobs_raw |> 
+  select(c('job_id', 'num_positions', 'business_title', 'title_code_num', 'level', 'job_category', 'full_time_indicator', 'career_level', 'salary_range_from', 'salary_range_to', 'salary_frequency', 'work_unit', 'posting_date', 'posting_updated'))
+  
+my_connection <- dbConnect(drv = odbc::odbc(),
+                           Driver = "ODBC Driver 18 for SQL Server",
+                           server = "tcp:data607project3server.database.windows.net,1433",
+                           database = "Data 607 Project 3 Database",
+                           uid = "Overview8909",
+                           pwd = key_get("Project3SQL","Overview8909"),
+                           encoding = "latin1"
+                           )
+dbAppendTable(my_connection,"nyc_jobs",nyc_jobs_raw)
+dbDisconnect(my_connection)
+```
+ 
+ 
+#### Step 4
+
+
+### Conclusions
+
+...
