@@ -1,0 +1,77 @@
+---
+title: "DATA607: Assignment 6"
+author: "Farhana Akther"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Web APIs
+
+### Overview
+
+In this assignment we are given The New York Times  **[APIs]( https://developer.nytimes.com/api)** web page to sign up for an API key in order to get access to their APIs Data. We will choose one of the APIs, construct an interface in R to read in the JSON data, and transform it into an R Dataframe.
+
+#### Load Libraries:
+
+```{r}
+library(dplyr)
+library(jsonlite)
+library(DT)
+```
+
+#### Obtaining API from NYT Developers Web Page
+*here we are extracting the data from NYT Book API by calling the Example Calls (2nd URL)*  
+
+```{r}
+url <- "https://api.nytimes.com/svc/books/v3/reviews.json?author=Stephen+King&api-key=SOfRrxpoYgeFDX8eoGRqvq6lMEcqyEWH"
+```
+
+#### Reading the JSON File     
+
+```{r}
+books_nyt <- fromJSON(url, flatten = TRUE)
+```
+
+## Create Dataframe
+
+```{r}
+books_nyt2 = data.frame(books_nyt$results)
+head(books_nyt2)
+```
+
+## Transform Data
+
+```{r}
+books_nyt3 <- select(books_nyt2, url, publication_dt, byline, book_title, book_author, summary)
+colnames(books_nyt3) = c("Article URL", "Publication Date", "Byline", "Book Title", "Book Author", "Summary")
+datatable(books_nyt3)
+```
+
+## Rearrange Columns
+
+```{r}
+books_nyt3 <- books_nyt3[c("Book Title", "Book Author", "Publication Date", "Article URL", "Summary")]
+datatable(books_nyt3)
+```
+
+
+## Conclusion
+
+In this assignment, we are able to learn:
+
+* How to create an API account on the New York Times Developer web site.
+
+* How to construct an interface in R to read the JSON data and transform it into a R DataFrame by using fromJSON() to Get a JSON file from NYT Archives API.
+
+* How to create a datafram using data.frame(), transform and rearrange the table by using select() and colnames() functions. 
+
+
+
