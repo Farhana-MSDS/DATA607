@@ -1,0 +1,327 @@
+---
+title: "DATA 607: Week 10 Assignment 7 "
+author: "Waheeb Algabri and Farhana Akther"
+output:
+  html_document:
+    highlight: pygments
+    theme: cerulean
+    toc: true
+    toc_float: true
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+For this assignment, we will be exploring and building off of the code presented in chapter 2 of the web textbook, [Text Mining with R](https://www.tidytextmining.com/sentiment.html).The first part of this assignment is taken directly from the book example code. From there, we will be Working with a different corpus of our choosing, and Incorporate at least one additional sentiment lexicon which we can discover through research (potentially from another R package).
+
+
+#### Loading Required Libraries
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(textdata)
+library(janeaustenr)
+library(wordcloud)
+library(reshape2)
+library(gutenbergr)
+library(openintro)
+```
+
+
+# The Sentiment Datasets
+
+Obtain sentiment lexicons from three different sources: AFINN, Bing, and NRC.
+
+**Note**: If you initially encounter problems loading AFINN, bing, or nrc, you will need to accept the license for the lexicon by typing in the console for R Markdown
+
+```{r echo=TRUE, eval=TRUE}
+afinn<- get_sentiments("afinn")
+bing<- get_sentiments("bing")
+nrc<-get_sentiments("nrc")
+```
+
+# Code Example From Text Book
+
+## Sentiment Analysis with Inner Join
+
+in the code below, we use the `austen_books()` function from the `janeaustenr` package to extract text from Jane Austen's novels and prepare it for analysis by splitting it into individual words using the `unnest_tokens()` function.
+
+```{r}
+tidy_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(text, 
+                                regex("^chapter [\\divxlc]", 
+                                      ignore_case = TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+```
+
+
+Next, we filter the NRC sentiment lexicon to include only words with a "joy" sentiment, then use the `inner_join()` function to merge this lexicon with the tidy text data frame. The resulting data frame is then filtered to include only words from "Emma" and is counted using `count()` to show the frequency of words with a "joy" sentiment.
+
+```{r}
+nrc_joy <- get_sentiments("nrc") %>% 
+  filter(sentiment == "joy")
+
+tidy_books %>%
+  filter(book == "Emma") %>%
+  inner_join(nrc_joy) %>%
+  count(word, sort = TRUE)
+```
+
+Now, we join the tidy text data frame with the Bing sentiment lexicon using `inner_join()`. We then use `count()` and `pivot_wider()` functions to count the number of positive and negative words in each book, grouped by sections of 80 lines. Finally, the `ggplot()` function is used to create bar charts that show the sentiment score over the plot trajectory of each novel. The chart is facet-wrapped by book, and the sentiment score is calculated as the difference between the number of positive and negative words.
+
+```{r}
+jane_austen_sentiment <- tidy_books %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(book, index = linenumber %/% 80, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>% 
+  mutate(sentiment = positive - negative)
+ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x")
+```
+
+
+## Comparing The Three Sentiment Dictionaries
+
+
+* Filter Data
+
+```{r}
+pride_prejudice <- tidy_books %>% 
+  filter(book == "Pride & Prejudice")
+```
+
+
+* Calculate Sentiment Scores
+
+```{r}
+afinn <- pride_prejudice %>% 
+  inner_join(get_sentiments("afinn")) %>% 
+  group_by(index = linenumber %/% 80) %>% 
+  summarise(sentiment = sum(value)) %>% 
+  mutate(method = "AFINN")
+bing_and_nrc <- bind_rows(
+  pride_prejudice %>% 
+    inner_join(get_sentiments("bing")) %>%
+    mutate(method = "Bing et al."),
+  pride_prejudice %>% 
+    inner_join(get_sentiments("nrc") %>% 
+                 filter(sentiment %in% c("positive", 
+                                         "negative"))
+    ) %>%
+    mutate(method = "NRC")) %>%
+  count(method, index = linenumber %/% 80, sentiment) %>%
+  pivot_wider(names_from = sentiment,
+              values_from = n,
+              values_fill = 0) %>% 
+  mutate(sentiment = positive - negative)
+```
+
+
+* Visualize Sentiment Scores
+
+```{r}
+bind_rows(afinn, 
+          bing_and_nrc) %>%
+  ggplot(aes(index, sentiment, fill = method)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~method, ncol = 1, scales = "free_y")
+```
+
+
+
+## Most Common Positive and Negative Words
+
+Counts the frequency of words in a text dataset categorized by sentiment using the bing lexicon
+
+```{r}
+bing_word_counts <- tidy_books %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+```
+
+
+Visualizes the top 10 positive and negative words using the bing lexicon in a bar plot.
+
+
+```{r}
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  slice_max(n, n = 10) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
+
+
+Creates a custom list of stop words that includes the words "well", "", and "miss" by binding together a tibble of these words with the standard list of stop words.
+
+```{r}
+custom_stop_words <- bind_rows(tibble(word = c("well", "", "miss"),  
+                                      lexicon = c("custom")), 
+                               stop_words)
+```
+
+# Corpus 
+
+***My Bondage and My Freedom* by Frederick Douglass**
+
+We researched the book by its ID number in the [project Gutenberg](https://www.gutenberg.org)
+
+We will analyze text **My Bondage and My Freedom**, autobiographical slave narrative by Frederick Douglass. We will use the *gutenbergr* library to search and download it. 
+
+## The Sentiment Dataset
+
+```{r echo=TRUE, eval=TRUE}
+bondage_count <- gutenberg_download(202)
+bondage_count
+```
+
+## Tidying the Works of Frederick Douglass
+
+```{r echo=TRUE, eval=TRUE}
+#removing the first 763 rows of text which are table of contents
+bondage_count <- bondage_count[c(763:nrow(bondage_count)),]
+
+#using unnest_tokens to have each line be broken into individual rows. 
+bondage <- bondage_count %>% unnest_tokens(word, text)
+bondage
+
+bondage_index <- bondage_count %>% 
+  filter(text != "") %>%
+  mutate(linenumber = row_number(),
+         chapter = cumsum(str_detect(text, regex("(?<=Chapter )([\\dII]{1,3})", ignore_case =  TRUE)))) 
+bondage_index
+```
+
+## Sentiment Analysis With Inner Join
+### Most Frequent Positive Words
+
+```{r echo=TRUE, eval=TRUE}
+bondage %>% 
+  inner_join(get_sentiments("bing")) %>% 
+  filter(sentiment == "positive") %>%
+  count(word, sentiment, sort = TRUE) %>% 
+  top_n(10) %>%
+  mutate(word = reorder(word, desc(n))) %>%
+  ggplot() + 
+  aes(x = word, y = n) +
+  labs(title = "Most Frequent Positive Words") + 
+  ylab("Count") + 
+  xlab("Word") +
+  geom_col() + 
+  geom_text(aes(label = n, vjust = -.5)) + 
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+### Most Frequent Negative Words
+
+```{r echo=TRUE, eval=TRUE}
+bondage %>% 
+  inner_join(get_sentiments("bing")) %>% 
+  filter(sentiment == "negative") %>%
+  count(word, sentiment, sort = TRUE) %>% 
+  top_n(10) %>%
+  mutate(word = reorder(word, desc(n))) %>%
+  ggplot() + 
+  aes(x = word, y = n) +
+  labs(title = "Most Frequent Negative Words") + 
+  ylab("Count") + 
+  xlab("Word") +
+  geom_col() + 
+  geom_text(aes(label = n, vjust = -.5)) + 
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+### Wordclouds
+
+Let’s look at the most common words in Frederick Douglasss's book with wordcloud. 
+
+
+```{r}
+library(RColorBrewer)
+# Color palette for the wordclouds
+colors <- brewer.pal(8, "Dark2")
+# Wordcloud of non-stopwords
+bondage %>%
+  anti_join(stop_words) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100, color = colors))
+```
+
+Above the most common words in Frederick Douglasss's autobiographical slave narrativ.
+
+```{r}
+# Sentiment analysis to tag positive and negative words using an inner join, then find the most common positive and negative words
+bondage %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = colors,
+                   max.words = 100)
+```
+
+The size of a word’s text above is in proportion to its frequency within its sentiment. We can use this visualization to see the most important positive and negative words, but the sizes of the words are not comparable across sentiments.
+
+
+# Loughran Sentiment Lexicon
+We will use [loughran](https://rdrr.io/cran/tidytext/man/get_sentiments.html) lexicon that we have researched.
+
+**Note**: If you initially encounter problems loading loughran, you will need to accept the license for the lexicon by typing in the console for R Markdown
+
+```{r echo=TRUE, eval=TRUE}
+lghrn <- get_sentiments("loughran")
+unique(lghrn$sentiment)
+#let’s explore the lexicon to see what types of words are litigious and constraining.
+bondage_index %>% 
+  unnest_tokens(word, text) %>% 
+  inner_join(get_sentiments("loughran")) %>%
+  filter(sentiment %in% c("litigious", "constraining")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  group_by(sentiment) %>%
+  top_n(10) %>%
+  ggplot() + 
+  aes(x = reorder(word,desc(n)), y = n) + 
+  geom_col() +
+  facet_grid(~sentiment, scales = "free_x")  + 
+  geom_text(aes(label = n, vjust = -.5)) + 
+  labs(title = "Words Associated with Litigious and Constraining") + 
+  ylab("Count") + 
+  xlab("Word") + 
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+# Conclusion 
+
+This assignment has allowed us to explore the topic of sentiment analysis. We have successfully implemented and expanded upon the main example code from chapter 2 of the Text Mining with R book. We have used three different sentiment lexicons: ‘AFINN’, ‘bing’, and ‘nrc’ to analyze the sentiment of Jane Austen's novels. Further, by using the ‘gutenbergr’ library we have explored the “My Bondage and My Freedom" by Frederick Douglass. We have tidied the dataset with one-token-per-row by using the unnest_tokens () function. We have used our sentiment analysis with inner join to be able to find the most frequent positive words and most frequent negative words. From our findings, we can see the respective most frequent positive and negative words are **master** and **slave**. These two words are also look like the most common words using wordcloud. Moreover, we filter the ‘loughran’ sentiment lexicon to include only words with a “litigious" and “constraining" sentiment. The resulting data frame is then filtered to include only words from “bondage” and is counted using count () to show the frequency of words with a “litigious" and “constraining" sentiments. Form here we can see that the words associated with Litigious results is more then constraining.  
