@@ -1,0 +1,83 @@
+---
+title: "DATA607:Recommendation System"
+author: "Farhana Akther"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+![](LogoNetflix.png)
+
+## Introduction
+
+Netflix is a streaming service that offers a wide variety of award-winning TV shows, movies, anime, documentaries, and more on thousands of internet-connected devices. With a low monthly price, you can watch as much you want from wherever and whenever you want to. I decided to use Netflix as an example in this discussion because in my opinion it is one of the best subscription-based streaming services when it comes to recommendations. Netflix uses a personalized recommendation system based on machine learning algorithms to suggest content to its users. The system is based on user behavior and preferences, including their viewing history, ratings, and search queries.
+
+## Scenario Design
+
+**Who are the target users?**
+
+Netflix's target users are people who are interested in a wide range of entertainment options and who value convenience, rationalization, and flexibility in their streaming experience.
+
+**What are their key goals?**
+
+Netflix's key goals are centered around providing a high-quality, personalized, and convenient streaming service to its subscribers while continuing to grow and innovate in the highly competitive streaming industry.
+
+**How can you help them accomplish these goals?**
+
+Data scientists can help Netflix achieve its key goals by leveraging data to create better content, improve the user experience, and make data-driven decisions about the company's growth and strategy.
+
+## Reverse Engineer
+
+While designing Netflix’s recommendation engine we have to keep in mind that the company’s goal is to “entertain the world whatever your taste, and no matter where you live" (Netflix). In order to achieve this objective, Netflix provides this platform with a wide offer, high-quality subtitles, and  accurate personalized recommendations. Netflix uses an advanced machine-learning-based recommendation system that analyzes users’ choices to suggest them new movies and TV shows (RecoAI 2022). In this discussion, I am going to take a closer look at their recommendation engine and see if I can provide any specific suggestions about how to improve the Netflix’s recommendation capabilities going forward.
+
+#### **Recommendation System:**
+
+Netflix's recommendation system uses a combination of collaborative filtering, content-based filtering, and deep learning techniques to suggest content that users are likely to enjoy.
+
+**Collaborative Filtering:** This algorithm analyzes user behavior and recommends content based on the behavior of other users with similar preferences. Collaborative filtering is used to suggest content that a user is likely to enjoy based on the viewing history, ratings, and search queries of similar users.
+
+**Content-Based Filtering:** This algorithm analyzes the attributes of the content that a user has already watched, such as genre, actors, and director, and recommends similar content. Content-based filtering is used to suggest content that is similar to what the user has already shown interest in.
+
+**Deep Learning Techniques:** This set of algorithms uses neural networks to analyze user data and identify patterns that are not easily detected by other algorithms. Deep learning techniques are used to improve the accuracy of Netflix's recommendation system and provide more personalized suggestions to users.
+
+
+#### **Netflix’s Algorithms:** 
+
+Netflix uses a variety of algorithms to power its recommendation system.  It uses various technologies and machine learning models to provide millions of users with accurate suggestions. The recommendation systems at Netflix span various algorithmic approaches like reinforcement learning, neural networks, causal modelling, probabilistic graphical models, matrix factorization, ensembles and bandits to name some of them.
+
+The specific algorithms used by Netflix may vary based on the application and the data being analyzed, as the company is constantly experimenting and improving its technology.
+
+
+#### **Performance and A/B Testing:**  
+
+The vital part of Netflix’s recommendation system relies on [A/B testing](https://en.wikipedia.org/wiki/A/B_testing). Netflix uses A/B testing to evaluate the performance of its recommendation system in a controlled environment to make improvements. The A/B testing is used to evaluate the effectiveness of different algorithms, user interfaces, and content recommendations before rolling them out to all users. This helps to ensure that changes to the recommendation system improve the user experience and achieve the company's key goals.
+
+## Recommendation and Conclusion: 
+
+In conclusion, we can see that the Netflix recommendation system is actually very complex, and it uses various technologies and machine learning models to provide millions of users with accurate suggestions. These recommendation system approaches have proven to be one of the most effective in the industry and its users have been able to enjoy an unmatched personalized experience. 
+
+A general recommendation that can help improve Netflix's recommendation system capabilities going forward would be to integrate more user-generated content into the recommendation system. To make personalized recommendations, currently Netflix primarily relies on user behavior data, such as viewing history, ratings, and search queries. While this approach has proven effective, it can be limited by the amount and diversity of data available for each user. By incorporating more user-generated content, such as user reviews, comments, and social media activity, Netflix can gain a deeper understanding of user preferences and improve the accuracy of its recommendations.
+Another potential recommendation is to explore more advanced deep learning techniques, such as generative adversarial networks (GANs), to create more personalized content recommendations. GANs can generate new content based on user preferences, which can help Netflix to recommend content that is not only similar to what the user has already watched, but also tailored to their specific interests and preferences.
+
+**Source:** 
+
+https://www.netflix.com/
+
+https://about.netflix.com/en
+
+https://recoai.net/netflix-recommendation-system-how-it-works/
+
+https://dl.acm.org/doi/pdf/10.1145/2843948
+
+https://research.netflix.com/research-area/recommendations
+
+https://medium.com/@springboard_ind/how-netflixs-recommendation-engine-works-bd1ee381bf81
+
+https://buffer.com/resources/what-is-user-generated-content/
