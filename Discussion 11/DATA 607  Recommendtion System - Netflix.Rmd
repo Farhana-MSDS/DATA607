@@ -4,14 +4,18 @@ author: "Farhana Akther"
 date: "`r Sys.Date()`"
 output:
   html_document:
-    toc: true
+    toc: yes
     toc_depth: 2
-    toc_float: true
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 
 ![](LogoNetflix.png)
 
@@ -63,8 +67,8 @@ The vital part of Netflix’s recommendation system relies on [A/B testing](http
 
 In conclusion, we can see that the Netflix recommendation system is actually very complex, and it uses various technologies and machine learning models to provide millions of users with accurate suggestions. These recommendation system approaches have proven to be one of the most effective in the industry and its users have been able to enjoy an unmatched personalized experience. 
 
-A general recommendation that can help improve Netflix's recommendation system capabilities going forward would be to integrate more user-generated content into the recommendation system. To make personalized recommendations, currently Netflix primarily relies on user behavior data, such as viewing history, ratings, and search queries. While this approach has proven effective, it can be limited by the amount and diversity of data available for each user. By incorporating more user-generated content, such as user reviews, comments, and social media activity, Netflix can gain a deeper understanding of user preferences and improve the accuracy of its recommendations.
-Another potential recommendation is to explore more advanced deep learning techniques, such as generative adversarial networks (GANs), to create more personalized content recommendations. GANs can generate new content based on user preferences, which can help Netflix to recommend content that is not only similar to what the user has already watched, but also tailored to their specific interests and preferences.
+A general recommendation that can help improve Netflix's recommendation system capabilities going forward would be to integrate more [user-generated content](https://buffer.com/resources/what-is-user-generated-content/) (UGC) into the recommendation system. To make personalized recommendations, currently Netflix primarily relies on user behavior data, such as viewing history, ratings, and search queries. While this approach has proven effective, it can be limited by the amount and diversity of data available for each user. By incorporating more user-generated content, such as user reviews, comments, and social media activity, Netflix can gain a deeper understanding of user preferences and improve the accuracy of its recommendations.
+Another potential recommendation is to explore more advanced deep learning techniques, such as [generative adversarial networks](https://en.wikipedia.org/wiki/Generative_adversarial_network) (GANs), to create more personalized content recommendations. GANs can generate new content based on user preferences, which can help Netflix to recommend content that is not only similar to what the user has already watched, but also tailored to their specific interests and preferences.
 
 **Source:** 
 
@@ -81,3 +85,5 @@ https://research.netflix.com/research-area/recommendations
 https://medium.com/@springboard_ind/how-netflixs-recommendation-engine-works-bd1ee381bf81
 
 https://buffer.com/resources/what-is-user-generated-content/
+
+https://en.wikipedia.org/wiki/Generative_adversarial_network
